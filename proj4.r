@@ -31,7 +31,6 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
     inv_hess_matrix <- chol2inv(R)
     theta <- theta - drop(inv_hess_matrix %*% grad_vector)
     func_value <- func(theta,...)
-    if (iter==max.half&func_value>=func_value_original) maxit <- maxit/2
     if (sum(abs(grad_vector)>=tol*abs(func_value+fscale))==0) {
       try(chol(hess_matrix))
       return(list(f=func_value,theta=theta,iter=iter,g=grad_vector,
