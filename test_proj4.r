@@ -18,4 +18,3 @@ hb <- function(th,k=2) {
 }
 
 newt(theta=c(0,0),func=rb,grad=gb,hess=hb,k=2)
-
