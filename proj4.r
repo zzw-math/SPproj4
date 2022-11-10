@@ -62,17 +62,17 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
       hess_matrix <- hess(theta,...)
       R <- chol(hess_matrix)
       elapse <- backsolve(R,forwardsolve(t(R),grad_vector)) 
-      ## halved iteration elapse
+      ## iteration elapse which will be halved
       theta_new <- theta - elapse 
       func_value_new <- func(theta,...)
       while (func_value_new>func_value) {
         if (times.half==20) stop('the step fails to reduce the objective despite 
                                trying max.half step halvings')
         ##Set the maximum of times we can halve the steps to 20
-        elapse <- elapse/2
+        elapse <- elapse/2  ## halved iteration elapse
         theta_new <- theta - elapse
         func_value_new <- func(theta_new,...)
-        times.half <- times.half + 1
+        times.half <- times.half + 1 ## iterations of number of halves
       }
       iter <- iter + 1
       func_value <- func_value_new
