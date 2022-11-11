@@ -47,46 +47,36 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
     ## matrix, and then perform the iteration to get new theta.
     times.half <- 0  ## initialise the number of times to be halved
     grad_vector <- grad(theta,...)
-    if (is.null(hess)){
-      if (iter==0) {
-        inv_hess_matrix <- diag(1,length(theta))
-      } else {
-        s <- theta - theta_old
-        s <- matrix(s, length(theta), 1)
-        y <- grad_vector - grad_vector_old
-        y <- matrix(y, 1, length(theta))
-        I <- diag(1,length(theta))
-        inv_hess_matrix <- 
-          (I-(s%*%y)/drop(y%*%s))%*%inv_hess_matrix_old%*%
-          (I-(s%*%y)/drop(y%*%s)) + (s%*%t(s))/drop(y%*%s)
-      }
-    } else {
+    if (!is.null(hess)) {
       hess_matrix <- hess(theta,...)
+    } else {
+      p <- length(theta)
+      hess_matrix <- matrix(0,p,p)
+      for (j in 1:p) {
+        increment <- rep(0,p)
+        increment[j] <- eps
+        hess_matrix[,j] <- (grad(theta+increment,...)-grad_vector)/eps
+        hess_matrix <- (hess_matrix+t(hess_matrix))/2
+      }
     }
-    if (sum(abs(grad_vector)>=tol*abs(func_value+fscale))==0) {
+    if (max(abs(grad_vector))<tol*(abs(func_value)+fscale)) {
       ## In 'if', we test whether every gradient is lower than the critical
       ## value, and we define the number which greater than the critical value
       ## to be 0.
       ## When theta is satisfied, perform 'try' to test Hessian matrix.
-      if(!is.null(hess)) {
-        try(R <- chol(hess_matrix))
-        inv_hess_matrix <- chol2inv(R)
-      }
+      try(R <- chol(hess_matrix))
+      inv_hess_matrix <- chol2inv(R)
       return(list(f=func_value,theta=theta,iter=iter,g=grad_vector,
                   Hi=inv_hess_matrix))
     }
     ## When theta is not satisfied, we replaced it by halving the step. 
-    if (!is.null(hess)) {
-      R <- chol(hess_matrix)
-      elapse <- backsolve(R,forwardsolve(t(R),grad_vector)) 
-    } else {
-      elapse <- inv_hess_matrix %*% grad_vector
-      inv_hess_matrix_old <- inv_hess_matrix
-    }
+    R <- chol(hess_matrix)
+    elapse <- backsolve(R,forwardsolve(t(R),grad_vector)) 
+    
     ## iteration elapse which will be halved
     theta_new <- theta - elapse 
     func_value_new <- func(theta_new,...)
-    while (func_value_new>func_value) {
+    while (func_value_new > func_value) {
       if (times.half==20) stop('the step fails to reduce the objective 
       despite trying max.half step halvings')
       ## Set the maximum of times we can halve the steps to 20
@@ -97,8 +87,6 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
     }
     iter <- iter + 1
     func_value <- func_value_new
-    theta_old <- theta
-    grad_vector_old <- grad_vector
     theta <- theta_new
   }
   warning('maxit is reached without convergence')
