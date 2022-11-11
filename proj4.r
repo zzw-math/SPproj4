@@ -53,9 +53,9 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
       p <- length(theta)
       hess_matrix <- matrix(0,p,p)
       for (j in 1:p) {
-        increment <- rep(0,p)
-        increment[j] <- eps
-        hess_matrix[,j] <- (grad(theta+increment,...)-grad_vector)/eps
+        theta_add <- theta
+        theta_add[j] <- theta_add[j]+eps
+        hess_matrix[,j] <- (grad(theta_add,...)-grad_vector)/eps
         hess_matrix <- (hess_matrix+t(hess_matrix))/2
       }
     }
