@@ -29,7 +29,6 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
   ##        eps, the finite difference intervals to use when a Hessian function
   ##                is not provided 
   #####
-  iter <- 0  ## initialise the interval
   func_value <- func(theta,...)   
   grad_vector <- grad(theta,...)
   if (abs(func_value)==Inf) {
@@ -40,12 +39,12 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
     ## If the gradient of function approaches infinity, we also stop the loop
     stop('the derivatives are not finite at the initial theta')
   }
+  iter <- 0  ## initialize the iteration times
   while (iter <= maxit) {
     ## In while loop, we need to make sure for a given theta, the gradient
     ## matrix is positively definite. If it converges, we calculate Hessian to
     ## show positive definite matrix. If it diverges, we also calculate Hessian
     ## matrix, and then perform the iteration to get new theta.
-    times.half <- 0  ## initialise the number of times to be halved
     grad_vector <- grad(theta,...)
     if (!is.null(hess)) {
       hess_matrix <- hess(theta,...)
@@ -56,8 +55,8 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
         theta_add <- theta
         theta_add[j] <- theta_add[j]+eps
         hess_matrix[,j] <- (grad(theta_add,...)-grad_vector)/eps
-        hess_matrix <- (hess_matrix+t(hess_matrix))/2
       }
+      hess_matrix <- (hess_matrix+t(hess_matrix))/2
     }
     if (max(abs(grad_vector))<tol*(abs(func_value)+fscale)) {
       ## In 'if', we test whether every gradient is lower than the critical
@@ -76,8 +75,9 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
     ## iteration elapse which will be halved
     theta_new <- theta - elapse 
     func_value_new <- func(theta_new,...)
+    times.half <- 0  ## initialise the number of times to be halved
     while (func_value_new > func_value) {
-      if (times.half==20) stop('the step fails to reduce the objective 
+      if (times.half==max.half) stop('the step fails to reduce the objective 
       despite trying max.half step halvings')
       ## Set the maximum of times we can halve the steps to 20
       elapse <- elapse/2  ## halved iteration elapse
