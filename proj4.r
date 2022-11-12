@@ -1,6 +1,6 @@
 ##      names     | university user names
 ##   Ziwen Zhong  | s2326022
-## Wenzheng Zhang |
+## Wenzheng Zhang | s2310185
 ##   Tianqi Dai   | s2302524
 
 ## github repo: https://github.com/zzw-math/SPproj4.git
