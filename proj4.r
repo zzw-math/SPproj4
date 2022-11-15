@@ -51,11 +51,11 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
   #####
   func_value <- func(theta,...)   
   grad_vector <- grad(theta,...)
-  if (abs(func_value)==Inf) {
+  if (is.infinite(func_value)) {
     ## If the value of function approaches infinity, we stop the loop
     stop('the objective function is not finite at the initial theta')
   }
-  if (sum(abs(grad_vector))==Inf) {
+  if (any(is.infinite(grad_vector))) {
     ## If the gradient of function approaches infinity, we also stop the loop
     stop('the derivatives are not finite at the initial theta')
   }
@@ -100,11 +100,11 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
                   Hi=inv_hess_matrix))
     }
     ## if not reach convergence, calculate the step (elapse) of iteration
-    ## elapse = H^{-1} %*% gradient
+    ## elapse = -H^{-1} %*% gradient
     R <- chol(hess_matrix)
-    elapse <- backsolve(R,forwardsolve(t(R),grad_vector)) 
+    elapse <- -backsolve(R,forwardsolve(t(R),grad_vector)) 
     
-    theta_new <- theta - elapse ## use step to obtain new theta 
+    theta_new <- theta + elapse ## use step to obtain new theta 
     func_value_new <- func(theta_new,...) 
     times.half <- 0  ## initialize the number of times to be halved
     ## check whether the function value is lowered, if not, halve the step
@@ -113,7 +113,7 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
       if (times.half==max.half) stop('the step fails to reduce the objective 
       despite trying max.half step halvings')
       elapse <- elapse/2     ## halve the step
-      theta_new <- theta - elapse
+      theta_new <- theta + elapse
       func_value_new <- func(theta_new,...)
       times.half <- times.half + 1    ## halve times + 1
     }
