@@ -49,6 +49,7 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
   ##         iteration times, gradient vector and inverse Hessian matrix (if 
   ##         have) at convergence.
   #####
+  p <- length(theta)
   func_value <- func(theta,...)   
   grad_vector <- grad(theta,...)
   if (is.infinite(func_value)) {
@@ -73,7 +74,6 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
     if (!is.null(hess)) {              
       hess_matrix <- hess(theta,...) 
     } else {
-      p <- length(theta)
       hess_matrix <- matrix(0,p,p)   ## create an empty matrix to store hessian
       ## H_{.,j} = dg(theta)/d(theta_j), use for loop to generate each column.
       for (j in 1:p) {      
@@ -93,17 +93,23 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
       ## still return the result but the inverse Hessian is NULL.
       inv_hess_matrix <- NULL 
       try({  
-        R <- chol(hess_matrix)    
-        inv_hess_matrix <- chol2inv(R)  
-      })     
+        R <- chol(hess_matrix)
+        inv_hess_matrix <- chol2inv(R)
+      })
       return(list(f=func_value,theta=theta,iter=iter,g=grad_vector,
                   Hi=inv_hess_matrix))
     }
     ## if not reach convergence, calculate the step (elapse) of iteration
+    ## firstly we judge if Hessian is positive definite, if not, we will add a
+    ## multiple of identity matrices to it, the multiplier starts to be
+    ## eps*norm(H), then 10*multiplier until Hessian is positive definite.
+    times.add = 0
+    while(inherits(try({R <- chol(hess_matrix)},silent=T),'try-error')) {
+      hess_matrix <- hess_matrix+diag(rep(eps*norm(hess_matrix)*10^iter.add,p))
+      times.add <- times.add + 1
+    }
     ## elapse = -H^{-1} %*% gradient
-    R <- chol(hess_matrix)
     elapse <- -backsolve(R,forwardsolve(t(R),grad_vector)) 
-    
     theta_new <- theta + elapse ## use step to obtain new theta 
     func_value_new <- func(theta_new,...) 
     times.half <- 0  ## initialize the number of times to be halved
