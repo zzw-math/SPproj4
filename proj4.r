@@ -20,12 +20,13 @@
 ## Step 3: If it is convergence, judge the positive definite of Hessian, and 
 ##         return the results.
 ## Step 4: If it is not convergence, calculate the Hessian and step, then 
-##         obtain new theta.
+##         obtain new theta, if the Hessian is not positive definite, add
+##         a disturbance to it.
 ## Step 5: Check whether the step improves the object function.
 ## Step 6: If not, halve the step and back to step 4, we can only repeat this 
 ##         process max.half times or raise error.
-## Step 7: Renew function value and theta and back to step 2. We can only repeat
-##         maxit times or raise warning.
+## Step 7: Renew function value and theta and back to step 2. We can only 
+##         repeat maxit times or raise warning.
 #####
 
 newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
